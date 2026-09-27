@@ -8,7 +8,9 @@ const TOKEN_EXPIRY = "7d";
 
 function getPrisma(db: D1Database): PrismaClient {
   const adapter = new PrismaD1(db);
-  return new PrismaClient({ adapter } as any);
+  return new PrismaClient({ adapter } as unknown as ConstructorParameters<
+    typeof PrismaClient
+  >[0]);
 }
 
 function getJwtSecret(secret: string): Uint8Array {
@@ -51,7 +53,7 @@ export async function verifyToken(
     const { payload } = await jwtVerify(token, getJwtSecret(secret));
     return {
       userId: payload.userId as string,
-      email: payload.email as string,
+      email: payload.email as string
     };
   } catch {
     return null;
@@ -94,7 +96,7 @@ export async function handleRegister(
 
     const passwordHash = await hashPassword(password);
     const user = await prisma.user.create({
-      data: { email, passwordHash },
+      data: { email, passwordHash }
     });
 
     const token = await createToken(
@@ -165,10 +167,7 @@ export async function handleMe(
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const payload = await verifyToken(
-    authHeader.slice(7),
-    env.JWT_SECRET
-  );
+  const payload = await verifyToken(authHeader.slice(7), env.JWT_SECRET);
   if (!payload) {
     return Response.json({ error: "Invalid token" }, { status: 401 });
   }

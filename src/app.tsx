@@ -16,7 +16,9 @@ interface Conversation {
   createdAt: number;
 }
 
-function decodeJwtPayload(token: string): { userId: string; email: string } | null {
+function decodeJwtPayload(
+  token: string
+): { userId: string; email: string } | null {
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
     return { userId: payload.userId, email: payload.email };
@@ -90,9 +92,9 @@ function LoginPage({ onAuth }: { onAuth: (auth: AuthState) => void }) {
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password })
       });
-      const data = (await res.json()) as any;
+      const data = (await res.json()) as Record<string, string>;
       if (!res.ok) {
         setError(data.error || "Something went wrong");
         return;
@@ -216,7 +218,7 @@ function Sidebar({
   email,
   onLogout,
   open,
-  onClose,
+  onClose
 }: {
   conversations: Conversation[];
   activeId: string;
@@ -231,7 +233,9 @@ function Sidebar({
   return (
     <>
       {open && (
-        <div
+        <button
+          type="button"
+          aria-label="Close sidebar"
           className="fixed inset-0 bg-black/20 z-40 md:hidden"
           onClick={onClose}
         />
@@ -306,7 +310,7 @@ function Chat({
   auth,
   conversationId,
   onUpdateTitle,
-  onToggleSidebar,
+  onToggleSidebar
 }: {
   auth: AuthState;
   conversationId: string;
@@ -323,12 +327,12 @@ function Chat({
     agent: "TaskPlannerAgent",
     name: `${auth.userId}_${conversationId}`,
     onOpen: useCallback(() => setConnected(true), []),
-    onClose: useCallback(() => setConnected(false), []),
+    onClose: useCallback(() => setConnected(false), [])
   });
 
   const { messages, sendMessage, clearHistory, stop, status } = useAgentChat({
     agent,
-    experimental_throttle: 100,
+    experimental_throttle: 100
   });
 
   const isStreaming = status === "streaming" || status === "submitted";
@@ -349,7 +353,10 @@ function Chat({
       if (p.type === "text" && p.text) {
         titleSet.current = true;
         const t = p.text;
-        onUpdateTitle(conversationId, t.length > 40 ? t.slice(0, 37) + "..." : t);
+        onUpdateTitle(
+          conversationId,
+          t.length > 40 ? t.slice(0, 37) + "..." : t
+        );
         break;
       }
     }
@@ -379,7 +386,7 @@ function Chat({
     "Plan a career transition",
     "Organize a weekly meal prep routine",
     "Plan a garden landscaping project",
-    "Break down: start a YouTube channel",
+    "Break down: start a YouTube channel"
   ];
   const [suggestedPrompts] = useState(() => {
     const shuffled = [...allPrompts].sort(() => Math.random() - 0.5);
@@ -436,7 +443,7 @@ function Chat({
                     onClick={() =>
                       sendMessage({
                         role: "user",
-                        parts: [{ type: "text", text: prompt }],
+                        parts: [{ type: "text", text: prompt }]
                       })
                     }
                     className="px-3 py-2 text-sm border border-gray-300 rounded-lg text-gray-600 hover:bg-white hover:border-gray-400 disabled:opacity-50 transition-colors"
@@ -552,7 +559,7 @@ function Chat({
 
 function AppShell({
   auth,
-  onLogout,
+  onLogout
 }: {
   auth: AuthState;
   onLogout: () => void;
@@ -592,7 +599,7 @@ function AppShell({
         return next;
       });
     },
-    [auth.userId],
+    [auth.userId]
   );
 
   const handleUpdateTitle = useCallback(
@@ -603,7 +610,7 @@ function AppShell({
         return next;
       });
     },
-    [auth.userId],
+    [auth.userId]
   );
 
   return (

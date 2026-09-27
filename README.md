@@ -22,15 +22,15 @@ React (Vite)  <──WebSocket──>  Durable Object (AIChatAgent)  ──>  Wo
                                        └── DO SQLite (chat messages)
 ```
 
-| Component | Technology |
-|-----------|-----------|
-| LLM | Llama 3.3 70B via Workers AI |
-| Coordination | Durable Objects (AIChatAgent) |
-| User input | WebSocket chat with streaming |
+| Component    | Technology                                                              |
+| ------------ | ----------------------------------------------------------------------- |
+| LLM          | Llama 3.3 70B via Workers AI                                            |
+| Coordination | Durable Objects (AIChatAgent)                                           |
+| User input   | WebSocket chat with streaming                                           |
 | State/Memory | D1 + Prisma (tasks), DO SQLite (messages), localStorage (conversations) |
-| Frontend | React 19 + Tailwind CSS 4 |
-| Auth | bcryptjs + JWT (jose) |
-| Build | Vite + @cloudflare/vite-plugin |
+| Frontend     | React 19 + Tailwind CSS 4                                               |
+| Auth         | bcryptjs + JWT (jose)                                                   |
+| Build        | Vite + @cloudflare/vite-plugin                                          |
 
 ## Project structure
 

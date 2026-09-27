@@ -9,7 +9,9 @@ import { handleRegister, handleLogin, handleMe } from "./auth";
 
 function getPrisma(db: D1Database): PrismaClient {
   const adapter = new PrismaD1(db);
-  return new PrismaClient({ adapter } as any);
+  return new PrismaClient({ adapter } as unknown as ConstructorParameters<
+    typeof PrismaClient
+  >[0]);
 }
 
 const SYSTEM_PROMPT = `You are a task planning assistant. You help users plan ANY project or goal by breaking it into actionable tasks with timelines.
@@ -49,32 +51,30 @@ export class TaskPlannerAgent extends AIChatAgent<Env> {
           description:
             "Create a project plan with multiple tasks at once. Use this when the user describes a project or goal.",
           inputSchema: z.object({
-            projectName: z
-              .string()
-              .describe("Name of the project or goal"),
+            projectName: z.string().describe("Name of the project or goal"),
             taskTitles: z
               .array(z.string())
               .describe(
-                "List of 3-6 actionable task titles, each starting with a verb",
-              ),
+                "List of 3-6 actionable task titles, each starting with a verb"
+              )
           }),
           execute: async ({ projectName, taskTitles }) => {
             const parent = await prisma.task.create({
-              data: { title: projectName, description: "", userId },
+              data: { title: projectName, description: "", userId }
             });
             const tasks = [];
             for (const title of taskTitles) {
               const t = await prisma.task.create({
-                data: { title, userId, parentId: parent.id },
+                data: { title, userId, parentId: parent.id }
               });
               tasks.push(t.title);
             }
             return {
               project: projectName,
               created: tasks.length,
-              tasks,
+              tasks
             };
-          },
+          }
         }),
 
         addTask: tool({
@@ -82,21 +82,18 @@ export class TaskPlannerAgent extends AIChatAgent<Env> {
             "Add a single task. Use for individual tasks, not full project plans.",
           inputSchema: z.object({
             title: z.string().describe("Short, actionable task title"),
-            description: z
-              .string()
-              .optional()
-              .describe("Task details or notes"),
+            description: z.string().optional().describe("Task details or notes")
           }),
           execute: async ({ title, description }) => {
             const task = await prisma.task.create({
               data: {
                 title,
                 description: description || "",
-                userId,
-              },
+                userId
+              }
             });
             return { id: task.id, title: task.title, status: task.status };
-          },
+          }
         }),
 
         listTasks: tool({
@@ -106,16 +103,16 @@ export class TaskPlannerAgent extends AIChatAgent<Env> {
             const tasks = await prisma.task.findMany({
               where: { userId },
               include: { subtasks: true },
-              orderBy: { createdAt: "asc" },
+              orderBy: { createdAt: "asc" }
             });
             if (tasks.length === 0) return "No tasks yet.";
             return tasks.map((t) => ({
               id: t.id,
               title: t.title,
               status: t.status,
-              subtasks: t.subtasks.length,
+              subtasks: t.subtasks.length
             }));
-          },
+          }
         }),
 
         updateTask: tool({
@@ -125,36 +122,36 @@ export class TaskPlannerAgent extends AIChatAgent<Env> {
             id: z.string().describe("Task ID to update"),
             status: z
               .enum(["todo", "in_progress", "done"])
-              .describe("New status"),
+              .describe("New status")
           }),
           execute: async ({ id, status }) => {
-            const data: any = { status };
+            const data: Record<string, unknown> = { status };
             if (status === "done") data.completedAt = new Date();
             else data.completedAt = null;
             const task = await prisma.task.update({
               where: { id, userId },
-              data,
+              data
             });
             return { title: task.title, status: task.status };
-          },
+          }
         }),
 
         deleteTask: tool({
           description: "Delete a task and its subtasks.",
           inputSchema: z.object({
-            id: z.string().describe("Task ID to delete"),
+            id: z.string().describe("Task ID to delete")
           }),
           execute: async ({ id }) => {
             await prisma.task.deleteMany({
-              where: { parentId: id, userId },
+              where: { parentId: id, userId }
             });
             await prisma.task.delete({ where: { id, userId } });
             return { deleted: true };
-          },
-        }),
+          }
+        })
       },
       stopWhen: stepCountIs(5),
-      abortSignal: options?.abortSignal,
+      abortSignal: options?.abortSignal
     });
 
     return result.toUIMessageStreamResponse();
@@ -179,5 +176,5 @@ export default {
       (await routeAgentRequest(request, env)) ||
       new Response("Not found", { status: 404 })
     );
-  },
+  }
 } satisfies ExportedHandler<Env>;
